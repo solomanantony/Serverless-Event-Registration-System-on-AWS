@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Registration</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 20px; }
+    h1 { color: #232f3e; }
+    .event-card { border: 1px solid #ddd; padding: 16px; margin: 10px 0; border-radius: 8px; }
+    .btn { background: #ff9900; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; }
+    .btn:hover { background: #e88900; }
+    input { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+    #message { padding: 12px; margin-top: 10px; border-radius: 4px; display: none; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+
+  <h1>🎟️ Event Registration</h1>
+
+  <h2>Available Events</h2>
+  <div id="events-list">Loading events...</div>
+
+  <h2>Register for an Event</h2>
+  <div>
+    <input type="text" id="eventId" placeholder="Event ID (e.g. E001)" />
+    <input type="text" id="userName" placeholder="Your Full Name" />
+    <input type="email" id="userEmail" placeholder="Your Email Address" />
+    <button class="btn" onclick="register()">Register Now</button>
+  </div>
+
+  <div id="message"></div>
+
+  <script>
+    // !! REPLACE THIS with your API Gateway URL from Step 6d !!
+    const API_URL = 'https://7vfwok0ab0.execute-api.ap-south-2.amazonaws.com/prod';
+
+    // Load events when page opens
+    async function loadEvents() {
+      try {
+        const response = await fetch(`${API_URL}/events`);
+        const events = await response.json();
+
+        const container = document.getElementById('events-list');
+        
+        if (events.length === 0) {
+          container.innerHTML = '<p>No events available.</p>';
+          return;
+        }
+
+        container.innerHTML = events.map(e => `
+          <div class="event-card">
+            <strong>${e.title}</strong> (ID: ${e.eventId})<br>
+            📅 Date: ${e.date}<br>
+            🪑 Available Seats: ${e.availableSeats} / ${e.totalSeats}
+          </div>
+        `).join('');
+
+      } catch (err) {
+        document.getElementById('events-list').innerHTML = '<p>Could not load events.</p>';
+      }
+    }
+
+    // Register user for event
+    async function register() {
+      const eventId = document.getElementById('eventId').value.trim();
+      const userName = document.getElementById('userName').value.trim();
+      const userEmail = document.getElementById('userEmail').value.trim();
+      const msgDiv = document.getElementById('message');
+
+      // Simple validation
+      if (!eventId || !userName || !userEmail) {
+        showMessage('Please fill in all fields.', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ eventId, userName, userEmail })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          showMessage(`✅ ${result.message} (ID: ${result.registrationId})`, 'success');
+          loadEvents(); // Refresh seat count
+        } else {
+          showMessage(`❌ ${result.error}`, 'error');
+        }
+
+      } catch (err) {
+        showMessage('Something went wrong. Please try again.', 'error');
+      }
+    }
+
+    function showMessage(text, type) {
+      const msgDiv = document.getElementById('message');
+      msgDiv.textContent = text;
+      msgDiv.className = type;
+      msgDiv.style.display = 'block';
+    }
+
+    // Load events on page load
+    loadEvents();
+  </script>
+
+</body>
+</html>
