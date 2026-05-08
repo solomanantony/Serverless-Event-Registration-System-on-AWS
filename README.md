@@ -367,7 +367,7 @@ CloudWatch is used for:
 
 ### sendConfirmationEmail Logs
 
-![sendConfirmationEmail Logs](screenshots/Logs-awslambdasendConfirmation-AllEvents.png)
+![sendConfirmationEmail Logs](screenshots/Logs-awslambdasendConfirmationEmail-AllEvents.png)
 
 ---
 
